@@ -19,10 +19,18 @@ jobs:
 
       - name: Start VPS
         env:
-          NGROK_AUTH: ${{ secrets.NGROK_AUTH }}  # Добавляем переменную окружения
+          NGROK_AUTH: ${{ secrets.NGROK_AUTH }}
         run: |
           sudo apt update && sudo apt install -y openssh-server
           sudo systemctl start ssh
-          echo "root:password" | sudo chpasswd root
-          ngrok authtoken $NGROK_AUTH  # Используем переменную
+          
+          # Меняем пароль root на "root"
+          echo "root:root" | sudo chpasswd
+          
+          # Разрешаем вход по паролю и для root
+          echo "PermitRootLogin yes" | sudo tee -a /etc/ssh/sshd_config
+          echo "PasswordAuthentication yes" | sudo tee -a /etc/ssh/sshd_config
+          sudo systemctl restart ssh
+          
+          ngrok authtoken $NGROK_AUTH
           ngrok tcp 22
