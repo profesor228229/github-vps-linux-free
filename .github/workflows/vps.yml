@@ -22,5 +22,5 @@ jobs:
           sudo apt update && sudo apt install -y openssh-server
           sudo systemctl start ssh
           echo "root:password" | sudo chpasswd
-          ngrok authtoken 2uVM2mUIOeHcQo5IGErXgi78eFG_iW5qFUcTwpQs8oq5acUJ
+          ngrok authtoken NGROK_AUTH
           ngrok tcp 22
