@@ -23,6 +23,6 @@ jobs:
         run: |
           sudo apt update && sudo apt install -y openssh-server
           sudo systemctl start ssh
-          echo "root:password" | sudo chpasswd
+          echo "root:password" | sudo chpasswd root
           ngrok authtoken $NGROK_AUTH  # Используем переменную
           ngrok tcp 22
