@@ -1,32 +1,28 @@
-- name: Start VPS
-  env:
-    NGROK_AUTH: ${{ secrets.NGROK_AUTH }}
-  run: |
-    # Обновляем пакеты и устанавливаем SSH
-    sudo apt update && sudo apt install -y openssh-server
-    
-    # Включаем автоматический старт SSH при перезагрузке
-    sudo systemctl enable ssh
-    
-    # Перезапускаем SSH для применения изменений
-    sudo systemctl restart ssh
-    
-    # Меняем пароль root (здесь будет пароль "root")
-    echo "root:root" | sudo chpasswd
-    
-    # Разрешаем вход по SSH для root
-    echo "PermitRootLogin yes" | sudo tee -a /etc/ssh/sshd_config
-    echo "PasswordAuthentication yes" | sudo tee -a /etc/ssh/sshd_config
-    
-    # Перезапускаем SSH еще раз после изменения конфига
-    sudo systemctl restart ssh
-    
-    # Проверяем статус SSH (для отладки)
-    sudo systemctl status ssh --no-pager
-    
-    # Выводим открытые порты (для отладки)
-    sudo netstat -tuln | grep ':22'
-    
-    # Авторизуемся в Ngrok и запускаем туннель
-    ngrok authtoken $NGROK_AUTH
-    ngrok tcp 22
+name: Free VPS
+
+on: 
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Setup Ngrok
+        run: |
+          curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null
+          echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | sudo tee /etc/apt/sources.list.d/ngrok.list
+          sudo apt update && sudo apt install ngrok -y
+
+      - name: Start VPS
+        env:
+          NGROK_AUTH: ${{ secrets.NGROK_AUTH }}  # Добавляем переменную окружения
+        run: |
+          sudo apt update && sudo apt install -y openssh-server
+          sudo systemctl start ssh
+          echo "root:password" | sudo chpasswd
+          ngrok authtoken $NGROK_AUTH  # Используем переменную
+          ngrok tcp 22
